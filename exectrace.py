@@ -39,6 +39,7 @@ import argparse
 import bisect
 import cStringIO
 import collections
+import datetime
 import itertools
 import logging
 import math
@@ -60,6 +61,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--enable-tree', dest='enable_tree', action='store_true')
 parser.add_argument('--enable-histogram', dest='enable_histogram', action='store_true')
 parser.add_argument('--enable-jaeger', dest='enable_jaeger', action='store_true')
+parser.add_argument('--time-offset-file', dest='time_offset_file', action='store')
 args = parser.parse_args()
 
 
@@ -184,6 +186,11 @@ def trace_end_histogram():
 def trace_end_jaeger():
 	global proc_tracker
 
+	time_offset = 0.0
+	if args.time_offset_file:
+		time_offset += os.stat(args.time_offset_file).st_mtime
+		time_offset -= max([0.0] + [proc.finish_time or proc.start_time or 0.0 for proc in proc_tracker])
+
 	from jaeger_client import Config
 
 	config = Config(
@@ -198,8 +205,6 @@ def trace_end_jaeger():
 		validate=True,
 	)
 	tracer = config.initialize_tracer()
-
-	time_offset = 0.0
 
 	def walk(proc):
 		parent_span = None
