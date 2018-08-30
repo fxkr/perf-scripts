@@ -203,7 +203,7 @@ def trace_end_jaeger():
 			},
 			'logging': False,
 		},
-		service_name='perf-script',
+		service_name='process',
 		validate=True,
 	)
 	tracer = config.initialize_tracer()
@@ -216,7 +216,7 @@ def trace_end_jaeger():
 		start_time = (proc.start_time or 0) + time_offset
 		finish_time = (proc.finish_time or 0) + time_offset
 
-		proc.span = tracer.start_span("process", start_time=start_time, child_of=parent_span)
+		proc.span = tracer.start_span(proc.filename, start_time=start_time, child_of=parent_span)
 		proc.span.set_tag("pid", proc.pid)
 		proc.span.finish(finish_time=finish_time)
 
